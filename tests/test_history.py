@@ -35,3 +35,15 @@ def test_json_history_keeps_conversation_filter(tmp_path):
 
     assert store.list_entries("default") == [first]
     assert store.list_entries("other") == [second]
+
+
+def test_json_history_deletes_entry_from_file(tmp_path):
+    store = JsonHistoryStore(tmp_path / "history.json", max_entries=10)
+    first = make_entry(1)
+    second = make_entry(2)
+    store.add(first)
+    store.add(second)
+
+    store.delete(first.entry_id)
+
+    assert store.list_entries() == [second]

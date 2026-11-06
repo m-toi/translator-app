@@ -57,12 +57,10 @@ translate_app/
 │   ├── prompts.py
 │   ├── translator.py
 │   ├── line_translation.py
-│   └── language_detection.py
 ├── tests/
 │   ├── test_history.py
 │   ├── test_line_translation.py
 │   ├── test_prompts.py
-│   └── test_language_detection.py
 └── scripts/
     ├── start.sh
     ├── stop.sh
@@ -90,11 +88,12 @@ logs/       vLLMとStreamlitのログ
 主な処理は次のとおりです。
 
 - 言語選択欄を表示する
+- 入力欄の上に原文・翻訳先の言語と入れ替えボタンを表示する
 - 短文・技術・会話モードを選択する
 - 会話ID、関係、話者を入力する
 - 会話モードの「自分／相手」スイッチを表示する
-- 文章欄へ貼り付けた中国語を自動判定する
-- 入力変更時に翻訳を開始する
+- 入力欄の上で原文と翻訳先の言語を手動設定する
+- 改行またはボタン押下時に翻訳を開始する
 - 翻訳結果と会話履歴を表示する
 
 Streamlitは、画面操作のたびにPythonファイル全体を上から再実行します。
@@ -308,21 +307,6 @@ Streamlitの入力欄を改行で分割します。
 会話モードでは、各行を履歴へ保存した後、次の行の履歴として読み込むため、
 同じ入力欄内の前の行も後の行の文脈になります。
 
-### `language_detection.py`：中国語の簡易判定
-
-[language_detection.py](translate_app/language_detection.py) は、外部APIを使わずに
-中国語（簡体字）らしさを判定します。
-
-簡体字・中国語で頻出する文字、漢字の数、日本語のひらがな・カタカナの有無を使います。
-これは簡易判定なので、短い文章や日本語と共通する漢字だけの文章は誤判定する可能性があります。
-
-中国語らしい文章が貼り付けられると、`app.py`が次の設定にします。
-
-```text
-原文：zh
-翻訳先：ja
-```
-
 ## 5. `tests/`フォルダ
 
 テストは、vLLMを起動しなくても実行できるように作っています。
@@ -341,6 +325,7 @@ Streamlitの入力欄を改行で分割します。
 - 改行で分割される
 - 空行が無視される
 - 各行が履歴へ保存される
+- 履歴を個別にJSONから削除できる
 - 翻訳済みの行がキャッシュから再利用される
 - 翻訳先が変わったらキャッシュを再利用しない
 
@@ -351,11 +336,6 @@ Streamlitの入力欄を改行で分割します。
 - 技術翻訳のメッセージが作られる
 - 会話履歴がuser/assistantの組になる
 - 関係や話者を含む文脈が作られる
-
-### `test_language_detection.py`
-
-[test_language_detection.py](tests/test_language_detection.py) は、中国語らしい入力、
-日本語入力、短く判定が難しい入力を確認します。
 
 すべてのテストを実行するコマンドは次のとおりです。
 
@@ -398,14 +378,17 @@ bash scripts/stop.sh
 ### ブラウザから入力する場合
 
 1. `app.py`が入力欄の内容を受け取る
-2. 中国語らしさを判定する
-3. `line_translation.py`が文章を行へ分ける
-4. `history.py`から同じ会話の履歴を読む
-5. `prompts.py`がメッセージと文脈を作る
-6. `translator.py`がvLLMへ送る
-7. vLLMがPLaMoで翻訳する
-8. 結果をJSON履歴へ保存する
-9. Streamlitが結果をブラウザへ表示する
+2. 手動設定された言語を使う
+3. 改行追加またはボタン押下を翻訳トリガーとして判定する
+4. `line_translation.py`が文章を行へ分ける
+5. `history.py`から同じ会話の履歴を読む
+6. `prompts.py`がメッセージと文脈を作る
+7. `translator.py`がvLLMへ送る
+8. vLLMがPLaMoで翻訳する
+9. 翻訳成功と同時にJSON履歴へ保存する
+10. 会話モードでは保存済み履歴を次回翻訳の文脈として表示する
+11. 履歴の削除操作があればJSONから削除する
+12. Streamlitが結果をブラウザへ表示する
 
 ### CLIから入力する場合
 
@@ -432,12 +415,6 @@ bash scripts/stop.sh
 
 [translator.py](translate_app/translator.py) の`base_url`を変更します。
 ただし、個人利用で外部へ送信したくない場合はlocalhostのままにします。
-
-### 中国語判定を調整する
-
-[language_detection.py](translate_app/language_detection.py) の
-`SIMPLIFIED_CHINESE_HINTS`や判定条件を変更します。
-判定を厳しくすると誤判定が減る一方、短い中国語を見逃しやすくなります。
 
 ### 履歴保存をSQLiteへ移行する
 

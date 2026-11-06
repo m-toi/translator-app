@@ -21,6 +21,9 @@ class HistoryStore(Protocol):
     def add(self, entry: TranslationEntry) -> None:
         ...
 
+    def delete(self, entry_id: str) -> None:
+        ...
+
 
 class HistoryStoreError(RuntimeError):
     """履歴ファイルを安全に読み書きできない場合のエラー。"""
@@ -48,6 +51,14 @@ class JsonHistoryStore:
         # リストの先頭を古い履歴とすることで、FIFO削除を明確にする。
         entries = entries[-self.max_entries :]
         self._write(entries)
+
+    def delete(self, entry_id: str) -> None:
+        """指定した履歴をJSONから削除する。"""
+        entries = self._read()
+        remaining_entries = [entry for entry in entries if entry.entry_id != entry_id]
+        if len(remaining_entries) == len(entries):
+            raise HistoryStoreError(f"削除対象の履歴が見つかりません: {entry_id}")
+        self._write(remaining_entries)
 
     def _read(self) -> list[TranslationEntry]:
         if not self.path.exists():
