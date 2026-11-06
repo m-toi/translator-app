@@ -1,0 +1,36 @@
+# Pythonの仮想環境・キャッシュ
+.venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# アプリが実行時に作成する個人データ・一時ファイル
+data/
+.run/
+logs/
+error.txt
+
+# ダウンロードしたモデル本体（サイズが大きいためGit管理しない）
+plamo-3-translate-8b-W4A16/
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.gguf
+
+# 環境変数・秘密情報
+.env
+.env.*
+!.env.example
+
+# OS・エディターの作成ファイル
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
